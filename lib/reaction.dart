@@ -4,20 +4,30 @@ import 'package:flutter/widgets.dart';
 
 class Action {
   String module = 'action';
-  Map payload;
+  dynamic payload;
   Action([this.payload]);
   Future<dynamic> process(Map moduleStore) async {
-    return payload;
+    return {};
   }
 
   /**
- * sometimes you can startUp anohter actions once this action finished
- * action 的 process执行时候，如果需要在此action结束时立即启动另外一个action, 使用此方法
+ * action 的 process执行时候，如果需要启动另外一个action, 使用此方法
  * 其他情况不能使用
  */
   void doChildAction(Action action) {
     _GlobalStore.actionQueue
         .insert(_GlobalStore.actionQueue.indexOf(this) + 1, action);
+  }
+}
+
+class _FnAction extends Action {
+  Function fn;
+  @override
+  Future process(Map moduleStore) async {
+    if (fn != null) {
+      this.fn();
+    }
+    return {};
   }
 }
 
@@ -49,6 +59,13 @@ class _GlobalStore {
     listeners[module].add(inst);
   }
 
+  static unListenProps(String module, inst) {
+    if (!listeners.containsKey(module)) {
+      return;
+    }
+    listeners[module].remove(inst);
+  }
+
   static doAction(Action action, [String loading = 'none']) {
     int canStartCnt = 1;
     if (loading != null && loading != 'none') {
@@ -73,7 +90,8 @@ class _GlobalStore {
     }
 
     Action act = actionQueue[0];
-    Map mst = state[act.module];
+    // make a copy
+    Map mst = Map.fromEntries(state[act.module].entries);
     Map data = await act.process(mst);
     if (mst != null) {
       data.forEach((k, v) => mst[k] = v);
@@ -94,32 +112,18 @@ class _GlobalStore {
   }
 }
 
-/**
- * register a module store, which is a Map<String, dynamic>
- * eg. A user store like : {'username': '', 'passwd': ''}
- */
 void regModule(String module, Map<String, dynamic> store) {
   _GlobalStore.regModule(module, store);
 }
 
-/**
- * to modify a module store, you should call this method;
- * action will append to the action-queue, and execute one by one.
- * so if you call: doAction(actionA); doAction(actionB), the actionB will execute when the actionA finished
- */
 void doAction(Action action, [String loading]) {
   _GlobalStore.doAction(action, loading);
 }
 
-/**
- * typically, one module's UI and action can ONLY use the module store which it belongs,
- * while, sometimes, you can use this method to access other module store's props
- */
-dynamic getModuleProp(String module, String propName) {
-  if (_GlobalStore.state.containsKey(module)) {
-    return _GlobalStore.state[module][propName];
-  }
-  return null;
+void doFunction(void Function() fn) {
+  _FnAction action = _FnAction();
+  action.fn = fn;
+  _GlobalStore.doAction(action);
 }
 
 /**
@@ -166,9 +170,22 @@ abstract class ModuleState<T extends StatefulWidget> extends State<T> {
   }
 
   _injectCares() {
+    if (cares == null) {
+      return;
+    }
     cares.forEach((module, s) {
       _GlobalStore.listenProps(module, this);
     });
+  }
+
+  _ejectCares() {
+    if (cares == null) {
+      return;
+    }
+    cares.forEach((module, s) {
+      _GlobalStore.unListenProps(module, this);
+    });
+    cares = null;
   }
 
   _updateCared() {
@@ -193,6 +210,12 @@ abstract class ModuleState<T extends StatefulWidget> extends State<T> {
 
   hear(String module) {
     this.setState(this._updateCared);
+  }
+
+  @override
+  dispose() {
+    _ejectCares();
+    super.dispose();
   }
 
   /// @param action the Action instance
