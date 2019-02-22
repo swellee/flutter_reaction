@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:reaction/example/addBeerAction.dart';
-import 'package:reaction/example/addGoodsAction.dart';
-import 'package:reaction/example/shopStore.dart';
-import 'package:reaction/example/userStore.dart';
+import 'package:reaction/example/add_goods_action.dart';
+import 'package:reaction/example/shop_store.dart';
+import 'package:reaction/example/user_store.dart';
 
 import '../reaction.dart';
 
