@@ -1,10 +1,11 @@
 import 'package:reaction/reaction.dart';
 
 class AddGoodsAction extends Action {
-  String module = 'shop'; // the moduleStore 's name that you given to regModule(name, xxStore)
+  String module =
+      'shop'; // the moduleStore 's name that you given to regModule(name, xxStore)
 
   AddGoodsAction(payload) : super(payload);
-  
+
   @override
   Future process(Map moduleStore) async {
     // override this 'async' process method ,

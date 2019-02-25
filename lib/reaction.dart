@@ -5,35 +5,31 @@ import 'package:flutter/widgets.dart';
 class Action {
   String module = 'module_name';
   dynamic payload;
-  /**
-   * when call doAction,usually you need to pass some data
-   * the data (here called payload) you may use in process method
-   */
+  /// when call doAction,usually you need to pass some data
+  /// the data (here called payload) you may use in process method
   Action([this.payload]);
 
-  /**
-   * @param moduleStore the [copy] of module store your action's module indicates
-   * you can use this action's payload data, deal with it or fetch api or something else
-   * when finished , you need return a Map that tell me which property was modified of the module store
-   * eg.
-   *    // outside you have a module store like this:
-   *    {
-   *      'name': 'reaction'
-   *    };
-   *    // once you wanner rename 'reaction' to 'flutter-reaction'
-   *    doAction(RenameAction('flutter-reaction'));
-   *    // then in the class RenameAction's process method, code is like:
-   *    Future<dynamic> process(Map moduleStore) async {
-   *      bool renameOk = await fetch(someApi);
-   *      if (renameOk) {
-   *        // server said we rename succeed
-   *        return {'name': this.payload} // this.payload's value is 'flutter-reaction'
-   *        // then the module store's property [name] will be modified to 'flutter-reaction'
-   *        // if your widget is inherits ModuleState class, it will fresh render with the new 'name' value which is 'flutter-reaction'
-   *      }
-   *      return {}; // server fail, so return a blank map to tell me nothing was modified
-   *    }
-   */
+  /// @param moduleStore the [copy] of module store your action's module indicates
+  /// you can use this action's payload data, deal with it or fetch api or something else
+  /// when finished , you need return a Map that tell me which property was modified of the module store
+  /// eg.
+  /// // outside you have a module store like this:
+  /// {
+  /// 'name': 'reaction'
+  /// };
+  /// // once you wanner rename 'reaction' to 'flutter-reaction'
+  /// doAction(RenameAction('flutter-reaction'));
+  /// // then in the class RenameAction's process method, code is like:
+  /// Future<dynamic> process(Map moduleStore) async {
+  /// bool renameOk = await fetch(someApi);
+  /// if (renameOk) {
+  /// // server said we rename succeed
+  /// return {'name': this.payload} // this.payload's value is 'flutter-reaction'
+  /// // then the module store's property [name] will be modified to 'flutter-reaction'
+  /// // if your widget is inherits ModuleState class, it will fresh render with the new 'name' value which is 'flutter-reaction'
+  /// }
+  /// return {}; // server fail, so return a blank map to tell me nothing was modified
+  /// }
   Future<dynamic> process(Map moduleStore) async {
     return {};
   }
@@ -43,10 +39,8 @@ class Action {
  * if you want start another action follow closely,
  * you can call this method. otherwise, [don't !]
  */
-  void doChildAction(Action action) {
-    _GlobalStore.actionQueue
+  void doChildAction(Action action) => _GlobalStore.actionQueue
         .insert(_GlobalStore.actionQueue.indexOf(this) + 1, action);
-  }
 }
 
 class _FnAction extends Action {
@@ -141,44 +135,36 @@ class _GlobalStore {
   }
 }
 
-/**
- * register a module store
- */
+/// register a module store
 void regModule(String module, Map<String, dynamic> store) {
   _GlobalStore.regModule(module, store);
 }
 
-/**
- * get specific module store's prop
- */
+/// get specific module store's prop
 dynamic getModuleProp(String module, String propName){
  if(  _GlobalStore.state.containsKey(module)) {
     return _GlobalStore.state[module][propName];
   }
 }
 
-/**
- * run a action in queue
- * the actions will run one by one in queue,
- * and action.doChildAction(xx) will insert a action in current queue order
- * eg. 
- *  doAction(actionA);
- *    //in actionA's process Method: if call
- *    this.doChildAction(actionC); // this = actionA
- *  doAction(actionB);
- * 
- * then the order to run action is :
- * -actionA
- * -actionC
- * -actionB
- */
+/// run a action in queue
+/// the actions will run one by one in queue,
+/// and action.doChildAction(xx) will insert a action in current queue order
+/// eg.
+/// doAction(actionA);
+/// //in actionA's process Method: if call
+/// this.doChildAction(actionC); // this = actionA
+/// doAction(actionB);
+/// 
+/// then the order to run action is :
+/// -actionA
+/// -actionC
+/// -actionB
 void doAction(Action action, [String loading]) {
   _GlobalStore.doAction(action, loading);
 }
 
-/**
- * quick way to start a pure function as a action
- */
+/// quick way to start a pure function as a action
 void doFunction(void Function() fn) {
   _FnAction action = _FnAction();
   action.fn = fn;
@@ -186,20 +172,19 @@ void doFunction(void Function() fn) {
 }
 
 
-/**
- * must init [cares]' value in class property defination
-  like: class _xxState extends ModuleState<SomeUI> {
-  cares = {'moduleA': ['a','b','c'], 'moduleB': ['c:cc', 'd']}
-  } 
-  then you xxSate instance will have a props like:
-  this.props.a = globalStore.moduleA.a
-  this.props.b = globalStore.moduleA.b
-  this.props.c = globalStore.moduleA.c
 
-  // 'c:cc' will make sense as bellow:
-  this.props.cc = globalStore.moduleB.c
-  this.props.d = globalStore.moduleB.d
- */
+///  must init [cares]' value in class property defination
+///  like: class _xxState extends ModuleState<SomeUI> {
+///  cares = {'moduleA': ['a','b','c'], 'moduleB': ['c:cc', 'd']}
+///  } 
+///  then you xxSate instance will have a props like:
+///  this.props.a = globalStore.moduleA.a
+///  this.props.b = globalStore.moduleA.b
+///  this.props.c = globalStore.moduleA.c
+///
+///  // 'c:cc' will make sense as bellow:
+///  this.props.cc = globalStore.moduleB.c
+///  this.props.d = globalStore.moduleB.d
 abstract class ModuleState<T extends StatefulWidget> extends State<T> {
   Map<String, dynamic> props = new Map();
   Map<String, List<String>> cares;
