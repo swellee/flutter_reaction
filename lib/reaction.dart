@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 class Action {
   String module = 'module_name';
   dynamic payload;
+
   /// when call doAction,usually you need to pass some data
   /// the data (here called payload) you may use in process method
   Action([this.payload]);
@@ -40,7 +41,7 @@ class Action {
  * you can call this method. otherwise, [don't !]
  */
   void doChildAction(Action action) => _GlobalStore.actionQueue
-        .insert(_GlobalStore.actionQueue.indexOf(this) + 1, action);
+      .insert(_GlobalStore.actionQueue.indexOf(this) + 1, action);
 }
 
 class _FnAction extends Action {
@@ -113,10 +114,13 @@ class _GlobalStore {
     }
 
     Action act = actionQueue[0];
-    // make a copy
-    Map mst = Map.fromEntries(state[act.module].entries);
-    Map data = await act.process(mst);
+    Map mst = state[act.module];
+    // make a copy of mst to avoid action's process modify directly
+    Map mstCopy = mst == null ? null : Map.fromEntries(mst.entries);
+    // run process even if mst is null
+    Map data = await act.process(mstCopy);
     if (mst != null) {
+      // modify msg
       data.forEach((k, v) => mst[k] = v);
       _notifyChg(act.module);
     }
@@ -141,8 +145,8 @@ void regModule(String module, Map<String, dynamic> store) {
 }
 
 /// get specific module store's prop
-dynamic getModuleProp(String module, String propName){
- if(  _GlobalStore.state.containsKey(module)) {
+dynamic getModuleProp(String module, String propName) {
+  if (_GlobalStore.state.containsKey(module)) {
     return _GlobalStore.state[module][propName];
   }
 }
@@ -155,7 +159,7 @@ dynamic getModuleProp(String module, String propName){
 /// //in actionA's process Method: if call
 /// this.doChildAction(actionC); // this = actionA
 /// doAction(actionB);
-/// 
+///
 /// then the order to run action is :
 /// -actionA
 /// -actionC
@@ -171,12 +175,10 @@ void doFunction(void Function() fn) {
   _GlobalStore.doAction(action);
 }
 
-
-
 ///  must init [cares]' value in class property defination
 ///  like: class _xxState extends ModuleState<SomeUI> {
 ///  cares = {'moduleA': ['a','b','c'], 'moduleB': ['c:cc', 'd']}
-///  } 
+///  }
 ///  then you xxSate instance will have a props like:
 ///  this.props.a = globalStore.moduleA.a
 ///  this.props.b = globalStore.moduleA.b
@@ -262,5 +264,4 @@ abstract class ModuleState<T extends StatefulWidget> extends State<T> {
     _ejectCares();
     super.dispose();
   }
-
 }
