@@ -147,7 +147,16 @@ void regModule(String module, Map<String, dynamic> store) {
 /// get specific module store's prop
 dynamic getModuleProp(String module, String propName) {
   if (_GlobalStore.state.containsKey(module)) {
-    return _GlobalStore.state[module][propName];
+    var prop = _GlobalStore.state[module][propName];
+    if (prop is List) {
+      return prop.sublist(0);
+    } else if (prop is Set) {
+      return prop.toSet();
+    } else if (prop is Map) {
+      return Map.fromEntries(prop.entries);
+    } else {
+      return prop;
+    }
   }
 }
 
@@ -249,7 +258,18 @@ abstract class ModuleState<T extends StatefulWidget> extends State<T> {
         // add or set property from modulestore
         Map ms = _GlobalStore.state[m];
         if (ms != null) {
-          this.props[k] = ms[o];
+          var v = ms[o];
+          var nv;
+          if (v is List) {
+            nv = v.sublist(0);
+          } else if (v is Set) {
+            nv = v.toSet();
+          } else if (v is Map) {
+            nv = Map.fromEntries(v.entries);
+          } else {
+            nv = v;
+          }
+          this.props[k] = nv;
         }
       });
     });
