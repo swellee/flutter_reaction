@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 class Action {
   String module = 'module_name';
   dynamic payload;
+  List<Action> _children;
 
   /// when call doAction,usually you need to pass some data
   /// the data (here called payload) you may use in process method
@@ -40,8 +41,13 @@ class Action {
  * if you want start another action follow closely,
  * you can call this method. otherwise, [don't !]
  */
-  void doChildAction(Action action) => _GlobalStore.actionQueue
-      .insert(_GlobalStore.actionQueue.indexOf(this) + 1, action);
+  void doChildAction(Action action) {
+    if (_children ==null) {
+      _children = [];
+    }
+    _children.add(action);
+  }
+
 }
 
 class _FnAction extends Action {
@@ -126,7 +132,12 @@ class _GlobalStore {
     }
 
     await new Future.delayed(new Duration());
-    actionQueue.removeAt(0);
+    var cur = actionQueue.removeAt(0);
+    // if current action has children actions,
+    // do it's children actions just after it
+    if (cur._children != null) {
+      actionQueue.insertAll(0, cur._children);
+    }
 
     _nextAction();
   }
@@ -147,16 +158,7 @@ void regModule(String module, Map<String, dynamic> store) {
 /// get specific module store's prop
 dynamic getModuleProp(String module, String propName) {
   if (_GlobalStore.state.containsKey(module)) {
-    var prop = _GlobalStore.state[module][propName];
-    if (prop is List) {
-      return prop.sublist(0);
-    } else if (prop is Set) {
-      return prop.toSet();
-    } else if (prop is Map) {
-      return Map.fromEntries(prop.entries);
-    } else {
-      return prop;
-    }
+    return _GlobalStore.state[module][propName];
   }
 }
 
