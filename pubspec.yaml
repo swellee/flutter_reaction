@@ -1,8 +1,8 @@
-name: reaction
+name: flutter_reaction
 description: A flutter package for manage reactive state based on moduled store
-version: 1.0.9
+version: 1.1.0
 author: swellee <svtt@163.com>
-homepage: https://github.com/swellee/reaction.git
+homepage: https://github.com/swellee/flutter_reaction.git
 
 environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"

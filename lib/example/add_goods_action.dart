@@ -1,4 +1,4 @@
-import 'package:reaction/reaction.dart';
+import 'package:flutter_reaction/reaction.dart';
 
 class AddGoodsAction extends Action {
   String module =

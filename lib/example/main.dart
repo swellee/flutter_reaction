@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:reaction/example/add_goods_action.dart';
-import 'package:reaction/example/shop_store.dart';
-import 'package:reaction/example/user_store.dart';
+import 'package:flutter_reaction/example/add_goods_action.dart';
+import 'package:flutter_reaction/example/shop_store.dart';
+import 'package:flutter_reaction/example/user_store.dart';
 
 import '../reaction.dart';
 
